@@ -1,0 +1,98 @@
+#ports {
+    background-color: white;
+    height: 120px;
+    padding: 10px;
+    overflow-y: scroll;
+}
+
+.area-connect,.area-program-macro,.area-exec-macro {
+    display:none;
+}
+
+.area-connect.active
+,.area-program-macro.active
+,.area-exec-macro.active {
+    display:block;
+}
+
+.port-row {
+    margin-bottom: 5px
+}
+
+#m_up, #m_down {
+    width: 100%;
+    height: 59px
+}
+
+#m_left, #m_right {
+    width: 50%;
+    height: 59px;
+}
+
+#program_macro, #macro {
+    height: 228px;
+    width: 100%;
+}
+
+.row.well {
+    padding:30px;
+    background-color: rgb(243, 243, 243);
+    margin-top: 15px;
+}
+
+.macros.row > div {
+    margin-bottom: 15px;
+}
+
+.macro-group {
+    margin-bottom: 15px;
+}
+
+.status-title {
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+nav.main-header.in_exec {
+    background-color: rgb(255, 200, 190);
+}
+
+.drag-del {
+    display: none;
+}
+
+.drag-mode .drag-del {
+    display: block;
+}
+
+.drag-edit {
+    display: none;
+}
+
+.drag-mode .drag-edit {
+    display: block;
+}
+
+.drag-mode .drag-src button {
+    background-color: gray;
+}
+
+.drag-mode .macro-piece.dragov {
+    border-left: 5px dotted gray;
+}
+
+.confirm-overwrite {
+    display: none;
+}
+
+.mode-overwrite .default {
+    display: none;
+}
+
+.mode-overwrite .confirm-overwrite {
+    display: block;
+}
+
+.error {
+    color: rgb(150, 1, 1);
+}

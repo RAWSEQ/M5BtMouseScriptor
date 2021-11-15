@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>M5BtMouseScriptor</title>
+  <link rel="stylesheet" href="./node_modules/admin-lte/plugins/fontawesome-free/css/all.min.css">
+  <link rel="stylesheet" href="./node_modules/admin-lte/dist/css/adminlte.min.css">
+  <link rel="stylesheet" href="./common.css">
+  <script src="./renderer.js"></script>
+  <script>
+    window.nodeRequire = require;
+    delete window.require;
+    delete window.exports;
+    delete window.module;
+  </script>
+  <script src="./node_modules/admin-lte/plugins/jquery/jquery.min.js"></script>
+  <script>
+    $(document).on('dragstart', '.macro-piece button', function(){
+      $('.macro-list').addClass('drag-mode');
+      drag_from = $(this).text();
+    });
+    $(document).on('dragend', '.macro-piece button', function(){
+      $('.macro-list').removeClass('drag-mode');
+    });
+    $(document).on('drop', '.macro-piece button', function(e){
+      e.preventDefault();
+      console.log(drag_from+'→'+$(e.target).text());
+      macro_store_swap_before($('#macro-group-list').val(),drag_from,$(e.target).text());
+    });
+    $(document).on('dragover', '.macro-piece button', function(e){
+      e.preventDefault();
+    });
+    $(document).on('dragenter', '.macro-piece button', function(){
+      $(this).parent().addClass('dragov');
+    });
+    $(document).on('dragleave', '.macro-piece button', function(){
+      $(this).parent().removeClass('dragov')
+    });
+    $(document).on('click', '.macro-piece button', function(){
+      console.log($('#macro-group-list').val()+','+ $(this).text()+'→実行');
+      exec_macro_store($('#macro-group-list').val(), $(this).text());
+    });
+    $(document).on('drop', '.drag-del button', function(e){
+      e.preventDefault();
+      console.log(drag_from+'→削除');
+      macro_store_remove_macro($('#macro-group-list').val(),drag_from);
+    });
+    $(document).on('dragover', '.drag-del button', function(e){
+      e.preventDefault();
+    });
+    $(document).on('drop', '.drag-edit button', function(e){
+      e.preventDefault();
+      console.log($('#macro-group-list').val()+','+drag_from+'→編集');
+      edit_macro_store($('#macro-group-list').val(),drag_from);
+    });
+    $(document).on('dragover', '.drag-edit button', function(e){
+      e.preventDefault();
+    });
+    
+  </script>
+</head>
+<body class="hold-transition sidebar-mini">
+<div class="wrapper">
+  <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+    <ul class="navbar-nav">
+      <li class="nav-item">
+        <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+      </li>
+      <li class="nav-item status-title">
+        <span id="exec_status"></span>
+      </li>
+      <li><button onclick="exec_cancel()" class="exec_c btn btn-danger ml-2" style="display:none">中止</button></li>
+    </ul>
+    <ul class="navbar-nav ml-auto">
+      <li class="nav-item">
+        <a class="nav-link" data-widget="fullscreen" href="#" role="button">
+          <i class="fas fa-expand-arrows-alt"></i>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" data-widget="control-sidebar" data-slide="true" href="#" role="button">
+          <i class="fas fa-th-large"></i>
+        </a>
+      </li>
+    </ul>
+  </nav>
+  <aside class="main-sidebar sidebar-dark-primary elevation-4">
+    <a href="index3.html" class="brand-link">
+      <span class="brand-text font-weight-light">M5BtMouseScriptor</span>
+    </a>
+    <div class="sidebar">
+      <nav class="mt-2">
+        <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+          <li class="nav-item">
+          <a href="#" class="nav-link tab-connect active" onclick="changeTab('connect');">
+              <i class="fas fa-plug nav-icon"></i>
+              <p>接続設定</p>
+          </a>
+          </li>
+          <li class="nav-item">
+          <a href="#" class="nav-link tab-program-macro disabled" onclick="changeTab('program-macro');">
+              <i class="fas fa-microchip nav-icon"></i>
+              <p>マクロプログラム</p>
+          </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link tab-exec-macro disabled" onclick="changeTab('exec-macro');">
+                <i class="fas fa-list nav-icon"></i>
+                <p>マクロ一覧</p>
+              </a>
+            </li>
+          </ul>
+      </nav>
+    </div>
+  </aside>
+  <div class="content-wrapper">
+    <div class="content-header">
+    </div>
+    <div class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-lg-12 tab-areas area-connect active">
+            <div class="card card-primary card-outline">
+              <div class="card-header">
+                <h5 class="m-0">接続設定</h5>
+              </div>
+              <div class="card-body">
+                <div id="error"></div>
+                <div class="select-port">
+                <h6><b>ポート選択</b></h6>
+                <div id="ports"></div>
+                </div>
+                <div><b>マウスの移動量:</b><input type="text" id="movement" value="15" class="form-control"></div>
+            </div>
+            </div>
+          </div>
+          <div class="col-lg-12 tab-areas area-program-macro">
+            <div class="card card-primary card-outline">
+              <div class="card-header">
+                <h5 class="m-0">マクロプログラム</h5>
+              </div>
+              <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-9">
+                      <div class="row">
+                        <div class="col-sm-4"><button id="m_reset" onclick="m_reset()" class="btn btn-block btn-primary cmd-instance">原点に戻る(rst)</button></div>
+                        <div class="col-sm-4">
+                            <div class="input-group">
+                                <input type="text" id="m_wait_second" value="1" class="form-control">
+                                <span class="input-group-append">
+                                <button id="m_wait" onclick="m_wait()" class="btn btn-block btn-primary cmd-instance">秒待つ(wts)</button>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-sm-2"><button id="m_scr" onclick="m_scr()" class="btn btn-block btn-primary cmd-instance">右BTN(scr)</button></div>
+                        <div class="col-sm-2"><button id="m_scm" onclick="m_scm()" class="btn btn-block btn-primary cmd-instance">中BTN(scm)</button></div>
+                      </div>
+                      <div class="row well">
+                        <div class="col-sm-12"><b>移動座標：</b><span id="monitor">0,0</span></div>
+                        <div class="col-sm-6">
+                          <div><button id="m_up" onclick="m_up()" class="btn btn-default cmd-instance">↑(w)</button></div>
+                          <div><button id="m_left" onclick="m_left()" class="btn btn-default cmd-instance">←(a)</button><button id="m_right" onclick="m_right()" class="btn btn-default cmd-instance">→(d)</button></div>
+                          <div><button id="m_down" onclick="m_down()" class="btn btn-default cmd-instance">↓(s)</button></div>
+                        </div>
+                        <div class="col-sm-6">
+                          <button id="m_comp" onclick="m_comp()" class="btn btn-block btn-primary cmd-instance">移動する(mmv)</button>
+                          <button id="m_comp_click" onclick="m_comp_click()" class="btn btn-block btn-primary cmd-instance">移動してクリック(mcl)</button>
+                          <button id="m_comp_press" onclick="m_comp_press()" class="btn btn-block btn-primary cmd-instance">移動してクリック固定(mpl)</button>
+                          <button id="m_comp_release" onclick="m_comp_release()" class="btn btn-block btn-primary cmd-instance">移動してクリック解除(mul)</button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-3">
+                      <b>マクロ：</b> <label><input id="is_loop" type="checkbox" value="1"> ループ実行</label>
+                      <textarea id="program_macro" class="form-control"></textarea>
+                      <button id="program_exec" onclick="program_exec()" class="btn btn-block btn-primary mt-2">全て実行</button>
+                      <button id="exec_cancel" onclick="exec_cancel()" class="btn btn-block btn-danger" style="display:none">中止</button>
+                      <div class="btn-group mt-2 d-flex" role="group">
+                        <button id="program_exec_line" onclick="program_exec_line()" class="btn btn-primary cmd-instance w-100">行実行</button>
+                        <button id="program_exec_line" class="btn btn-warning cmd-instance w-100" data-toggle="modal" data-target="#macro-store-regist">登録</button>
+                      </div>
+                      <div class="modal fade" id="macro-store-regist" style="display: none;">
+                        <div class="modal-dialog">
+                          <div class="modal-content">
+                            <div class="modal-header">
+                              <h4 class="modal-title">マクロ登録</h4>
+                              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">×</span></button>
+                              
+                            </div>
+                            <div class="modal-body">
+                              <div class="default">
+                                <p>登録名を指定してください</p>
+                                <label>グループ名：</label>
+                                <input type="text" id="macro_group" list="m-group" class="form-control" onchange="macro_store_select_group_combo()">
+                                <datalist id="m-group">
+                                  <!-- option value="" -->
+                                </datalist>
+                                <p class="error macro_group"></p>
+                                <label>マクロ名：</label>
+                                <input type="text" id="macro_name" list="m-name" class="form-control">
+                                <datalist id="m-name">
+                                  <!-- option value="" -->
+                                </datalist>
+                                <p class="error macro_name"></p>
+                              </div>
+                              <div class="confirm-overwrite">
+                                <p>ご指定のマクロ名は既に追加されています。上書きしますか？</p>
+                              </div>
+                            </div>
+                            <div class="modal-footer">
+                              <div class="default">
+                                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">閉じる</button>
+                                <button type="button" class="btn btn-primary" onclick="macro_store_regist()">登録</button>
+                              </div>
+                              <div class="confirm-overwrite">
+                                <button type="button" class="btn btn-default pull-left" onclick="$('#macro-store-regist').removeClass('mode-overwrite')">戻る</button>
+                                <button type="button" class="btn btn-primary" onclick="macro_store_regist_ovw()">上書き</button>
+                              </div>
+                            </div>
+                          </div>
+                          <!-- /.modal-content -->
+                        </div>
+                        <!-- /.modal-dialog -->
+                      </div>                      
+                    </div>
+                  </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-12 tab-areas area-exec-macro">
+            <div class="card card-primary card-outline">
+              <div class="card-header">
+                <h5 class="m-0">マクロ実行</h5>
+              </div>
+              <div class="card-body macro-list">
+                <div class="macro-group row">
+                  <div class="col-md-9">
+                    <select class="form-control" id="macro-group-list" onchange="macro_store_select_group()">
+                      <option>グループ1</option>
+                      <option>グループ2</option>
+                    </select>
+                  </div>
+                  <div class="col-md-3">
+                    <button class="btn btn-danger" onclick="remove_macro_group()">グループ削除</button>
+                  </div>
+                </div>
+                <div class="macros row" id="macro-name-list">
+                  <div class="col-md-3 macro-piece"><button draggable="true" class="btn btn-block btn-primary">マクロ１</button></div>
+                  <div class="col-md-3 macro-piece"><button draggable="true" class="btn btn-block btn-primary">マクロ２</button></div>
+                  <div class="col-md-3 macro-piece"><button draggable="true" class="btn btn-block btn-primary">マクロ３</button></div>
+                  <div class="col-md-3 macro-piece"><button draggable="true" class="btn btn-block btn-primary">マクロ４</button></div>
+                  <div class="col-md-3 macro-piece"><button draggable="true" class="btn btn-block btn-primary">マクロ５</button></div>
+                </div>
+                <div class="row">
+                  <div class="col-md-12 drag-edit"><button class="btn btn-block btn-warning">編集</button></div>
+                  <div class="col-md-12 drag-del mt-2"><button class="btn btn-block btn-danger">削除</button></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <aside class="control-sidebar control-sidebar-dark">
+    <div class="p-3">
+      <h5>その他設定</h5>
+      <p>実行間隔(ms)</p>
+      <input type="text" id="g_wait_ms" value="500" class="form-control">
+    </div>
+  </aside>
+  <footer class="main-footer">
+    <div class="float-right d-none d-sm-inline">
+      ltside
+    </div>
+    <strong>Copyright &copy; 2021 RAWSEQ, 2014-2021 <a href="https://adminlte.io">AdminLTE.io</a>.</strong> All rights reserved.
+  </footer>
+</div>
+<script src="./node_modules/admin-lte/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="./node_modules/admin-lte/dist/js/adminlte.min.js"></script>
+</body>
+</html>
