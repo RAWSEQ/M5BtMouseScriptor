@@ -1,4 +1,4 @@
-# M5BtMouseController
+# M5BtMouseScriptor
 
 ## 概要
 
