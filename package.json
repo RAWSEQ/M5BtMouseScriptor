@@ -1,12 +1,12 @@
 {
     "name": "m5-bt-mouse-scriptor",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "",
     "main": "main.js",
     "scripts": {
         "start": "electron .",
         "install": "electron-rebuild",
-        "build": "electron-packager . m5-bt-mouse-scriptor --platform=win32 --arch=x64 --overwrite && electron-packager . m5-bt-mouse-scriptor --platform=darwin --arch=x64 --overwrite"
+        "build": "electron-packager . m5-bt-mouse-scriptor --overwrite"
     },
     "author": "RAWSEQ",
     "license": "MIT",

@@ -305,6 +305,7 @@ function macro_store_regist_proc(group,name) {
   ipcRenderer.send('macro_store_regist',group,name,info);
   document.getElementById('macro_group').value = '';
   document.getElementById('macro_name').value = '';
+  $('#macro-store-regist').removeClass('mode-overwrite');
   $('#m-name').html('');
   macro_store_macro_reload();
   splash('登録しました。');
